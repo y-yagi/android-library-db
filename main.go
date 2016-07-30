@@ -13,10 +13,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-var (
-	db *sqlx.DB
-)
-
 func Index(ctx *fasthttp.RequestCtx, _ fasthttprouter.Params) {
 }
 
@@ -25,13 +21,14 @@ func ReleaseNotes(ctx *fasthttp.RequestCtx, ps fasthttprouter.Params) {
 	var url string
 	var androidLibrary AndroidLibrary
 	var releaseNotes []ReleaseNote
+	var db *sqlx.DB
 
 	pkgs = string(ctx.QueryArgs().Peek("packages"))
 	if len(pkgs) == 0 {
 		return
 	}
 
-	db, _ := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
+	db, _ = sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 
 	for _, pkg := range strings.Split(pkgs, ",") {
 		url = ""
