@@ -25,6 +25,8 @@ func ReleaseNotes(ctx *fasthttp.RequestCtx, ps fasthttprouter.Params) {
 
 	pkgs = string(ctx.QueryArgs().Peek("packages"))
 	if len(pkgs) == 0 {
+		ctx.Error(fasthttp.StatusMessage(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
+		fmt.Println("`packages` parameter not found")
 		return
 	}
 
@@ -41,6 +43,7 @@ func ReleaseNotes(ctx *fasthttp.RequestCtx, ps fasthttprouter.Params) {
 
 	b, err := json.Marshal(releaseNotes)
 	if err != nil {
+		ctx.Error(fasthttp.StatusMessage(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
 		fmt.Println(err)
 		return
 	}
