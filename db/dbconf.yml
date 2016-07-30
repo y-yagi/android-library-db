@@ -1,3 +1,6 @@
 development:
     driver: postgres
     open: dbname=android-library-db sslmode=disable
+test:
+    driver: postgres
+    open: dbname=android-library-db_test sslmode=disable
