@@ -48,6 +48,11 @@ func ReleaseNotes(ctx *fasthttp.RequestCtx, ps fasthttprouter.Params) {
 	fmt.Fprintf(ctx, "%s", b)
 }
 
+func Route(router *fasthttprouter.Router) {
+	router.GET("/", Index)
+	router.GET("/release_notes", ReleaseNotes)
+}
+
 func main() {
 	_, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -55,8 +60,7 @@ func main() {
 	}
 
 	router := fasthttprouter.New()
-	router.GET("/", Index)
-	router.GET("/release_notes", ReleaseNotes)
+	Route(router)
 
 	log.Fatal(fasthttp.ListenAndServe(":8080", router.Handler))
 }
