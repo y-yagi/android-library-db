@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	_ "bitbucket.org/liamstask/goose/cmd/goose"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
