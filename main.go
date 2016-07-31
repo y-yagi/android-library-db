@@ -4,66 +4,86 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
-	"github.com/buaazp/fasthttprouter"
+	"goji.io/pat"
+
+	"goji.io"
+
+	"golang.org/x/net/context"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/valyala/fasthttp"
 )
 
-func Index(ctx *fasthttp.RequestCtx, _ fasthttprouter.Params) {
+var (
+	db *sqlx.DB
+)
+
+func index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 }
 
-func ReleaseNotes(ctx *fasthttp.RequestCtx, ps fasthttprouter.Params) {
+func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var pkgs string
 	var url string
 	var androidLibrary AndroidLibrary
 	var releaseNotes []ReleaseNote
-	var db *sqlx.DB
 
-	pkgs = string(ctx.QueryArgs().Peek("packages"))
+	pkgs = r.URL.Query().Get("packages")
 	if len(pkgs) == 0 {
-		ctx.Error(fasthttp.StatusMessage(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
+		http.Error(w, http.StatusText(400), 400)
 		fmt.Println("`packages` parameter not found")
 		return
 	}
 
-	db, _ = sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
-
 	for _, pkg := range strings.Split(pkgs, ",") {
 		url = ""
-		_ = db.Get(&androidLibrary, "SELECT * FROM android_libraries WHERE package = $1", pkg)
-		if pkg == androidLibrary.Package {
-			url = androidLibrary.Release_note_url
+		err := db.Get(&androidLibrary, "SELECT * FROM android_libraries WHERE package = $1", pkg)
+
+		if err != nil {
+			fmt.Printf("select error %s\n", err)
+		} else {
+			if pkg == androidLibrary.Package {
+				url = androidLibrary.Release_note_url
+			}
 		}
 		releaseNotes = append(releaseNotes, ReleaseNote{Package: pkg, Url: url})
 	}
 
 	b, err := json.Marshal(releaseNotes)
 	if err != nil {
-		ctx.Error(fasthttp.StatusMessage(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
+		http.Error(w, http.StatusText(400), 400)
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Fprintf(ctx, "%s", b)
+	fmt.Fprintf(w, "%s", b)
 }
 
-func Route(router *fasthttprouter.Router) {
-	router.GET("/", Index)
-	router.GET("/release_notes", ReleaseNotes)
+func Route(mux *goji.Mux) {
+	mux.HandleFuncC(pat.Get("/"), index)
+	mux.HandleFuncC(pat.Get("/release_notes"), releaseNotes)
 }
 
 func main() {
-	_, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
+	var err error
+	db, err = sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	router := fasthttprouter.New()
-	Route(router)
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "8080"
+	}
 
-	log.Fatal(fasthttp.ListenAndServe(":8080", router.Handler))
+	mux := goji.NewMux()
+	Route(mux)
+
+	err = http.ListenAndServe(":"+port, mux)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

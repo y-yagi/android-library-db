@@ -1,26 +1,24 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/buaazp/fasthttprouter"
 	"github.com/jmoiron/sqlx"
-	"github.com/valyala/fasthttp"
+
+	"goji.io"
 )
 
-type readWriter struct {
-	net.Conn
-	r bytes.Buffer
-	w bytes.Buffer
+func startServer() *httptest.Server {
+	mux := goji.NewMux()
+	Route(mux)
+	ts := httptest.NewServer(mux)
+	return ts
 }
 
 func parseResponse(res *http.Response) (string, int) {
@@ -32,7 +30,7 @@ func parseResponse(res *http.Response) (string, int) {
 	return string(contents), res.StatusCode
 }
 
-func generateTestData(db *sqlx.DB) {
+func generateTestData() {
 	tx := db.MustBegin()
 	tx.MustExec("DELETE FROM android_libraries")
 	tx.MustExec("INSERT INTO android_libraries (package, release_note_url, created_at, updated_at) VALUES ('com.android.support:appcompat-v4', 'https://developer.android.com/topic/libraries/support-library/revisions.html', now(), now())")
@@ -41,57 +39,52 @@ func generateTestData(db *sqlx.DB) {
 }
 
 func TestMain(m *testing.M) {
-	os.Setenv("DATABASE_URL", "dbname=android-library-db_test  sslmode=disable")
-	db, _ := sqlx.Connect("postgres", "dbname=android-library-db_test  sslmode=disable")
+	db, _ = sqlx.Connect("postgres", "dbname=android-library-db_test sslmode=disable")
 	defer db.Close()
-	generateTestData(db)
+	generateTestData()
 	code := m.Run()
 	defer os.Exit(code)
 }
 
-func Test_SearchPages(t *testing.T) {
-	router := fasthttprouter.New()
-	Route(router)
-
-	s := &fasthttp.Server{
-		Handler: router.Handler,
+func Test_ReleaseNotes(t *testing.T) {
+	ts := startServer()
+	defer ts.Close()
+	res, err := http.Get(ts.URL + "/release_notes?packages=com.android.support:appcompat-v4,com.squareup.retrofit2:retrofit,aaa")
+	if err != nil {
+		t.Error("unexpected")
 	}
 
-	rw := &readWriter{}
-	rw.r.WriteString("GET //release_notes?packages=com.android.support:support-appcompat-v4,com.squareup.retrofit2:retrofit,aaa HTTP/1.1\r\n\r\n")
-
-	ch := make(chan error)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+	c, s := parseResponse(res)
+	if s != http.StatusOK {
+		t.Error("invalid status code", s)
 	}
 
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	resp.Read(br)
-
-	dec := json.NewDecoder(strings.NewReader(string(resp.Body())))
+	dec := json.NewDecoder(strings.NewReader(c))
 	var releaseNotes []ReleaseNote
 	dec.Decode(&releaseNotes)
 
 	if len(releaseNotes) != 3 {
-		t.Error("invalid response: ")
+		t.Error("invalid response: ", c)
 	}
 
 	if releaseNotes[0].Package != "com.android.support:appcompat-v4" {
-		t.Error("invalid Package: ", releaseNotes[0].Package)
+		t.Error("invalid package: ", releaseNotes[0].Package)
 	}
-
 	if releaseNotes[0].Url != "https://developer.android.com/topic/libraries/support-library/revisions.html" {
-		t.Error("invalid Url: ", releaseNotes[0].Url)
+		t.Error("invalid url: ", releaseNotes[0].Url)
 	}
 
+	if releaseNotes[1].Package != "com.squareup.retrofit2:retrofit" {
+		t.Error("invalid package: ", releaseNotes[1].Package)
+	}
+	if releaseNotes[1].Url != "https://github.com/square/retrofit/blob/master/CHANGELOG.md" {
+		t.Error("invalid url: ", releaseNotes[1].Url)
+	}
+
+	if releaseNotes[2].Package != "aaa" {
+		t.Error("invalid package: ", releaseNotes[2].Package)
+	}
+	if releaseNotes[2].Url != "" {
+		t.Error("invalid url: ", releaseNotes[2].Url)
+	}
 }
