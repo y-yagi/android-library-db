@@ -8,13 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"goji.io/pat"
-
-	"goji.io"
-
-	"golang.org/x/net/context"
-
 	"github.com/jmoiron/sqlx"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/engine/standard"
 	_ "github.com/lib/pq"
 )
 
@@ -22,20 +18,21 @@ var (
 	db *sqlx.DB
 )
 
-func index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func index(context echo.Context) error {
+	return nil
 }
 
-func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func releaseNotes(context echo.Context) error {
 	var pkgs string
 	var url string
 	var androidLibrary AndroidLibrary
 	var releaseNotes []ReleaseNote
 
-	pkgs = r.URL.Query().Get("packages")
+	pkgs = context.QueryParam("packages")
 	if len(pkgs) == 0 {
-		http.Error(w, http.StatusText(400), 400)
+		context.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		fmt.Println("`packages` parameter not found")
-		return
+		return nil
 	}
 
 	for _, pkg := range strings.Split(pkgs, ",") {
@@ -54,17 +51,18 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(releaseNotes)
 	if err != nil {
-		http.Error(w, http.StatusText(400), 400)
+		context.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		fmt.Println(err)
-		return
+		return err
 	}
 
-	fmt.Fprintf(w, "%s", b)
+	context.String(http.StatusOK, string(b))
+	return nil
 }
 
-func Route(mux *goji.Mux) {
-	mux.HandleFuncC(pat.Get("/"), index)
-	mux.HandleFuncC(pat.Get("/release_notes"), releaseNotes)
+func Route(echo *echo.Echo) {
+	echo.Get("/", index)
+	echo.Get("/release_notes", releaseNotes)
 }
 
 func main() {
@@ -79,11 +77,8 @@ func main() {
 		port = "8080"
 	}
 
-	mux := goji.NewMux()
-	Route(mux)
+	e := echo.New()
+	Route(e)
 
-	err = http.ListenAndServe(":"+port, mux)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	e.Run(standard.New(":" + port))
 }
