@@ -13,14 +13,37 @@ import (
 	"goji.io"
 
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 
+	"github.com/google/go-github/github"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
 var (
-	db *sqlx.DB
+	db                *sqlx.DB
+	githubAccessToken = os.Getenv("GITHUB_ACCESS_TOKEN")
 )
+
+const USER_NAME = "y-yagi"
+const REPOSITORY_NAME = "android-library-db"
+
+func createIssueToGithub(unknownPkgs string) {
+	title := "detect unknown packages"
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: githubAccessToken},
+	)
+	tc := oauth2.NewClient(oauth2.NoContext, ts)
+	client := github.NewClient(tc)
+
+	issueRequest := &github.IssueRequest{Title: &title, Body: &unknownPkgs}
+	_, _, err := client.Issues.Create(USER_NAME, REPOSITORY_NAME, issueRequest)
+
+	if err != nil {
+		fmt.Printf("create issue error%v\n", err)
+	}
+}
 
 func index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 }
@@ -30,6 +53,7 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var url string
 	var androidLibrary AndroidLibrary
 	var releaseNotes []ReleaseNote
+	var unknownPkgs string
 
 	pkgs = r.URL.Query().Get("packages")
 	if len(pkgs) == 0 {
@@ -44,6 +68,7 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Printf("select error %s\n", err)
+			unknownPkgs += pkg + "\n"
 		} else {
 			if pkg == androidLibrary.Package {
 				url = androidLibrary.Release_note_url
@@ -57,6 +82,10 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(400), 400)
 		fmt.Println(err)
 		return
+	}
+
+	if len(unknownPkgs) > 0 {
+		createIssueToGithub(unknownPkgs)
 	}
 
 	fmt.Fprintf(w, "%s", b)
