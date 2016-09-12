@@ -11,7 +11,10 @@ install:
   - go get github.com/google/go-github/github
   - go get bitbucket.org/liamstask/goose/cmd/goose
   - go get golang.org/x/oauth2
+  - go get github.com/golang/lint/golint
 
 before_script:
   - psql -c 'create database "android-library-db_test";' -U postgres
   - goose -env test up
+  - go vet .
+  - golint .
