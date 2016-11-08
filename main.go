@@ -50,6 +50,7 @@ func index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var pkgs string
+	var readOnly string
 	var url string
 	var androidLibrary AndroidLibrary
 	var releaseNotes []ReleaseNote
@@ -61,6 +62,8 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		fmt.Println("`packages` parameter not found")
 		return
 	}
+
+	readOnly = r.URL.Query().Get("read")
 
 	for _, pkg := range strings.Split(pkgs, ",") {
 		url = ""
@@ -84,7 +87,7 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(unknownPkgs) > 0 {
+	if len(unknownPkgs) > 0 && !(readOnly == "true") {
 		createIssueToGithub(unknownPkgs)
 	}
 

@@ -49,9 +49,10 @@ func TestMain(m *testing.M) {
 func Test_ReleaseNotes(t *testing.T) {
 	ts := startServer()
 	defer ts.Close()
-	res, err := http.Get(ts.URL + "/release_notes?packages=com.android.support:appcompat-v4,com.squareup.retrofit2:retrofit,aaa")
+
+	res, err := http.Get(ts.URL + "/release_notes?packages=com.android.support:appcompat-v4,com.squareup.retrofit2:retrofit,aaa&read=true")
 	if err != nil {
-		t.Error("unexpected")
+		t.Error("unexpected", err)
 	}
 
 	c, s := parseResponse(res)
@@ -87,4 +88,5 @@ func Test_ReleaseNotes(t *testing.T) {
 	if releaseNotes[2].Url != "" {
 		t.Error("invalid url: ", releaseNotes[2].Url)
 	}
+
 }
