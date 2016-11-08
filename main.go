@@ -77,10 +77,10 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			unknownPkgs += pkg + "\n"
 		} else {
 			if pkg == androidLibrary.Package {
-				url = androidLibrary.Release_note_url
+				url = androidLibrary.ReleaseNoteURL
 			}
 		}
-		releaseNotes = append(releaseNotes, ReleaseNote{Package: pkg, Url: url})
+		releaseNotes = append(releaseNotes, ReleaseNote{Package: pkg, URL: url})
 	}
 
 	b, err := json.Marshal(releaseNotes)
