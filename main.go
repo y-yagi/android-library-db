@@ -41,7 +41,7 @@ func createIssueToGithub(unknownPkgs string) {
 	_, _, err := client.Issues.Create(USER_NAME, REPOSITORY_NAME, issueRequest)
 
 	if err != nil {
-		fmt.Printf("create issue error%v\n", err)
+		fmt.Printf("create issue error: %v\n", err)
 	}
 }
 
