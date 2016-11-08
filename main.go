@@ -26,10 +26,9 @@ var (
 	githubAccessToken = os.Getenv("GITHUB_ACCESS_TOKEN")
 )
 
-const USER_NAME = "y-yagi"
-const REPOSITORY_NAME = "android-library-db"
-
 func createIssueToGithub(unknownPkgs string) {
+	var userName = "y-yagi"
+	var repositoryName = "android-library-db"
 	title := "detect unknown packages"
 
 	ts := oauth2.StaticTokenSource(
@@ -39,7 +38,7 @@ func createIssueToGithub(unknownPkgs string) {
 	client := github.NewClient(tc)
 
 	issueRequest := &github.IssueRequest{Title: &title, Body: &unknownPkgs}
-	_, _, err := client.Issues.Create(USER_NAME, REPOSITORY_NAME, issueRequest)
+	_, _, err := client.Issues.Create(userName, repositoryName, issueRequest)
 
 	if err != nil {
 		fmt.Printf("create issue error: %v\n", err)
@@ -98,7 +97,7 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", b)
 }
 
-func Route(mux *goji.Mux) {
+func route(mux *goji.Mux) {
 	mux.HandleFuncC(pat.Get("/"), index)
 	mux.HandleFuncC(pat.Get("/release_notes"), releaseNotes)
 }
@@ -116,7 +115,7 @@ func main() {
 	}
 
 	mux := goji.NewMux()
-	Route(mux)
+	route(mux)
 
 	err = http.ListenAndServe(":"+port, mux)
 	if err != nil {

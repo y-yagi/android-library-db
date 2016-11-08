@@ -16,7 +16,7 @@ import (
 
 func startServer() *httptest.Server {
 	mux := goji.NewMux()
-	Route(mux)
+	route(mux)
 	ts := httptest.NewServer(mux)
 	return ts
 }
