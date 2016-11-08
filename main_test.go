@@ -88,5 +88,4 @@ func Test_ReleaseNotes(t *testing.T) {
 	if releaseNotes[2].Url != "" {
 		t.Error("invalid url: ", releaseNotes[2].Url)
 	}
-
 }
