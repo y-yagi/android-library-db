@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -41,7 +42,7 @@ func createIssueToGithub(unknownPkgs string) {
 	_, _, err := client.Issues.Create(USER_NAME, REPOSITORY_NAME, issueRequest)
 
 	if err != nil {
-		fmt.Printf("create issue error%v\n", err)
+		fmt.Printf("create issue error: %v\n", err)
 	}
 }
 
@@ -50,6 +51,7 @@ func index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var pkgs string
+	var readOnly string
 	var url string
 	var androidLibrary AndroidLibrary
 	var releaseNotes []ReleaseNote
@@ -62,12 +64,17 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	readOnly = r.URL.Query().Get("read")
+
 	for _, pkg := range strings.Split(pkgs, ",") {
 		url = ""
 		err := db.Get(&androidLibrary, "SELECT * FROM android_libraries WHERE package = $1", pkg)
 
 		if err != nil {
-			fmt.Printf("select error %s\n", err)
+			if err != sql.ErrNoRows {
+				fmt.Printf("select error %s\n", err)
+			}
+
 			unknownPkgs += pkg + "\n"
 		} else {
 			if pkg == androidLibrary.Package {
@@ -84,7 +91,7 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(unknownPkgs) > 0 {
+	if len(unknownPkgs) > 0 && !(readOnly == "true") {
 		createIssueToGithub(unknownPkgs)
 	}
 
