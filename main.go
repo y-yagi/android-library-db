@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -70,7 +71,10 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		err := db.Get(&androidLibrary, "SELECT * FROM android_libraries WHERE package = $1", pkg)
 
 		if err != nil {
-			fmt.Printf("select error %s\n", err)
+			if err != sql.ErrNoRows {
+				fmt.Printf("select error %s\n", err)
+			}
+
 			unknownPkgs += pkg + "\n"
 		} else {
 			if pkg == androidLibrary.Package {
