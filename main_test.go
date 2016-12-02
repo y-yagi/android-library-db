@@ -16,7 +16,7 @@ import (
 
 func startServer() *httptest.Server {
 	mux := goji.NewMux()
-	Route(mux)
+	route(mux)
 	ts := httptest.NewServer(mux)
 	return ts
 }
@@ -71,21 +71,21 @@ func Test_ReleaseNotes(t *testing.T) {
 	if releaseNotes[0].Package != "com.android.support:appcompat-v4" {
 		t.Error("invalid package: ", releaseNotes[0].Package)
 	}
-	if releaseNotes[0].Url != "https://developer.android.com/topic/libraries/support-library/revisions.html" {
-		t.Error("invalid url: ", releaseNotes[0].Url)
+	if releaseNotes[0].URL != "https://developer.android.com/topic/libraries/support-library/revisions.html" {
+		t.Error("invalid url: ", releaseNotes[0].URL)
 	}
 
 	if releaseNotes[1].Package != "com.squareup.retrofit2:retrofit" {
 		t.Error("invalid package: ", releaseNotes[1].Package)
 	}
-	if releaseNotes[1].Url != "https://github.com/square/retrofit/blob/master/CHANGELOG.md" {
-		t.Error("invalid url: ", releaseNotes[1].Url)
+	if releaseNotes[1].URL != "https://github.com/square/retrofit/blob/master/CHANGELOG.md" {
+		t.Error("invalid url: ", releaseNotes[1].URL)
 	}
 
 	if releaseNotes[2].Package != "aaa" {
 		t.Error("invalid package: ", releaseNotes[2].Package)
 	}
-	if releaseNotes[2].Url != "" {
-		t.Error("invalid url: ", releaseNotes[2].Url)
+	if releaseNotes[2].URL != "" {
+		t.Error("invalid url: ", releaseNotes[2].URL)
 	}
 }

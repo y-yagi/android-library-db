@@ -2,15 +2,17 @@ package main
 
 import "time"
 
+// AndroidLibrary is library info
 type AndroidLibrary struct {
-	Id               int
-	Package          string
-	Release_note_url string
-	Created_at       time.Time
-	Updated_at       time.Time
+	ID             int
+	Package        string
+	ReleaseNoteURL string    `db:"release_note_url"`
+	CreatedAt      time.Time `db:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at"`
 }
 
+// ReleaseNote is library release note info
 type ReleaseNote struct {
 	Package string `json:"package"`
-	Url     string `json:"url"`
+	URL     string `json:"url"`
 }
