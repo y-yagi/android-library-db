@@ -4,13 +4,11 @@ go:
   - 1.7
 
 install:
-  - go get goji.io
-  - go get github.com/lib/pq
-  - go get github.com/jmoiron/sqlx
-  - go get github.com/google/go-github/github
-  - go get bitbucket.org/liamstask/goose/cmd/goose
-  - go get golang.org/x/oauth2
   - go get github.com/golang/lint/golint
+  - go get bitbucket.org/liamstask/goose/cmd/goose
+  - go get -v github.com/Masterminds/glide
+  - cd $GOPATH/src/github.com/Masterminds/glide && git checkout tags/0.10.2 && go install && cd -
+  - glide install
 
 before_script:
   - psql -c 'create database "android-library-db_test";' -U postgres
