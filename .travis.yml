@@ -15,3 +15,5 @@ before_script:
   - goose -env test up
   - go vet .
   - golint .
+
+script: go test -v
