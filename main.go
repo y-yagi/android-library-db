@@ -13,7 +13,6 @@ import (
 
 	"goji.io"
 
-	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/github"
@@ -45,10 +44,10 @@ func createIssueToGithub(unknownPkgs string) {
 	}
 }
 
-func index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func index(w http.ResponseWriter, r *http.Request) {
 }
 
-func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func releaseNotes(w http.ResponseWriter, r *http.Request) {
 	var pkgs string
 	var readOnly string
 	var url string
@@ -98,8 +97,8 @@ func releaseNotes(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func route(mux *goji.Mux) {
-	mux.HandleFuncC(pat.Get("/"), index)
-	mux.HandleFuncC(pat.Get("/release_notes"), releaseNotes)
+	mux.HandleFunc(pat.Get("/"), index)
+	mux.HandleFunc(pat.Get("/release_notes"), releaseNotes)
 }
 
 func main() {
