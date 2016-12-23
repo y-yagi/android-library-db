@@ -1,12 +1,12 @@
-hash: ac8980cadeceeca526b37b9cffe2cb6d48bc81f12c6e03c23d43ab3e540277f0
-updated: 2016-12-22T20:07:18.350799968+09:00
+hash: f2da80885f89b27a23ead38d27d4501811d2ca27238ae320958fc6158a2195c5
+updated: 2016-12-23T09:03:08.232094042+09:00
 imports:
 - name: github.com/golang/protobuf
   version: 8ee79997227bf9b34611aee7946ae64735e6fd93
   subpackages:
   - proto
 - name: github.com/google/go-github
-  version: 64431e18df1ef20e7f08b42de4ffa3d1e90754fe
+  version: b272bb85ab53b610b5660988998feb0e0294bd2b
   subpackages:
   - github
 - name: github.com/google/go-querystring
