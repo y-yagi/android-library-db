@@ -12,3 +12,4 @@ import:
   subpackages:
   - context
 - package: golang.org/x/oauth2
+- package: github.com/bugsnag/bugsnag-go

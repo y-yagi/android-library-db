@@ -3,18 +3,19 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
+	goji "goji.io"
 	"goji.io/pat"
-
-	"goji.io"
 
 	"golang.org/x/oauth2"
 
+	bugsnag "github.com/bugsnag/bugsnag-go"
 	"github.com/google/go-github/github"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -42,6 +43,21 @@ func createIssueToGithub(unknownPkgs string) {
 	if err != nil {
 		fmt.Printf("create issue error: %v\n", err)
 	}
+}
+
+func useBugsnag() bool {
+	bugsnagAPIKey := os.Getenv("BUGSNAG_API_KEY")
+	if len(bugsnagAPIKey) > 0 {
+		return true
+	}
+	return false
+}
+
+func notifyToIssue(unknownPkgs string) {
+	if useBugsnag() {
+		bugsnag.Notify(errors.New("detect unknown packages: " + unknownPkgs))
+	}
+	createIssueToGithub(unknownPkgs)
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +106,7 @@ func releaseNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(unknownPkgs) > 0 && !(readOnly == "true") {
-		createIssueToGithub(unknownPkgs)
+		notifyToIssue(unknownPkgs)
 	}
 
 	fmt.Fprintf(w, "%s", b)
@@ -99,6 +115,14 @@ func releaseNotes(w http.ResponseWriter, r *http.Request) {
 func route(mux *goji.Mux) {
 	mux.HandleFunc(pat.Get("/"), index)
 	mux.HandleFunc(pat.Get("/release_notes"), releaseNotes)
+}
+
+func init() {
+	if useBugsnag() {
+		bugsnag.Configure(bugsnag.Configuration{
+			APIKey: os.Getenv("BUGSNAG_API_KEY"),
+		})
+	}
 }
 
 func main() {

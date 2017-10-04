@@ -1,6 +1,12 @@
-hash: f2da80885f89b27a23ead38d27d4501811d2ca27238ae320958fc6158a2195c5
-updated: 2016-12-23T09:03:08.232094042+09:00
+hash: 22618411d0b15e2eb4968ac91bb1651b34e8fbc6b62bd01fd8c67cba373e173f
+updated: 2016-12-26T15:12:03.862031696+09:00
 imports:
+- name: github.com/bugsnag/bugsnag-go
+  version: de94149dafe8e7c9f97dc0fcd989c667e6b3b33a
+  subpackages:
+  - errors
+- name: github.com/bugsnag/panicwrap
+  version: aa7703c9414b36d4e9b2e42e6c704d0bfae7db64
 - name: github.com/golang/protobuf
   version: 8ee79997227bf9b34611aee7946ae64735e6fd93
   subpackages:
@@ -17,6 +23,8 @@ imports:
   version: cac998c4f0959c19c638c523e374fa8e4e0bcfe3
   subpackages:
   - reflectx
+- name: github.com/kardianos/osext
+  version: c2c54e542fb797ad986b31721e1baedf214ca413
 - name: github.com/lib/pq
   version: 5bf161122cd640c2a5a2c1d7fa49ea9befff31dd
   subpackages:
