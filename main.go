@@ -3,18 +3,19 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
+	goji "goji.io"
 	"goji.io/pat"
-
-	"goji.io"
 
 	"golang.org/x/oauth2"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/google/go-github/github"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -41,6 +42,21 @@ func createIssueToGithub(unknownPkgs string) {
 
 	if err != nil {
 		fmt.Printf("create issue error: %v\n", err)
+	}
+}
+
+func useSentry() bool {
+	sentryAPIKey := os.Getenv("SENTRY_API_KEY")
+	if len(sentryAPIKey) > 0 {
+		return true
+	}
+	return false
+}
+
+func notifyToIssue(unknownPkgs string) {
+	if useSentry() {
+		context := map[string]string{"pkgs": unknownPkgs}
+		raven.CaptureErrorAndWait(errors.New("detect unknown packages"), context)
 	}
 }
 
@@ -90,7 +106,7 @@ func releaseNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(unknownPkgs) > 0 && !(readOnly == "true") {
-		createIssueToGithub(unknownPkgs)
+		notifyToIssue(unknownPkgs)
 	}
 
 	fmt.Fprintf(w, "%s", b)
@@ -99,6 +115,12 @@ func releaseNotes(w http.ResponseWriter, r *http.Request) {
 func route(mux *goji.Mux) {
 	mux.HandleFunc(pat.Get("/"), index)
 	mux.HandleFunc(pat.Get("/release_notes"), releaseNotes)
+}
+
+func init() {
+	if useSentry() {
+		raven.SetDSN(os.Getenv("SENTRY_API_KEY"))
+	}
 }
 
 func main() {
