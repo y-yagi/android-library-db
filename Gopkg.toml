@@ -24,6 +24,8 @@
 #   go-tests = true
 #   unused-packages = true
 
+[metadata.heroku]
+  root-package = "github.com/y-yagi/android-library-db"
 
 [[constraint]]
   name = "goji.io"
