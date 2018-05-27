@@ -3,18 +3,19 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
+	goji "goji.io"
 	"goji.io/pat"
-
-	"goji.io"
 
 	"golang.org/x/oauth2"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/google/go-github/github"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -24,6 +25,20 @@ var (
 	db                *sqlx.DB
 	githubAccessToken = os.Getenv("GITHUB_ACCESS_TOKEN")
 )
+
+func useSentry() bool {
+	sentryAPIKey := os.Getenv("SENTRY_API_KEY")
+	if len(sentryAPIKey) > 0 {
+		return true
+	}
+	return false
+}
+
+func notifyToSentry(unknownPkgs string) {
+	if useSentry() {
+		raven.CaptureErrorAndWait(errors.New("detect unknown packages"+"\n\n"+unknownPkgs), nil)
+	}
+}
 
 func createIssueToGithub(unknownPkgs string) {
 	var userName = "y-yagi"
@@ -90,7 +105,11 @@ func releaseNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(unknownPkgs) > 0 && !(readOnly == "true") {
-		createIssueToGithub(unknownPkgs)
+		if useSentry() {
+			notifyToSentry(unknownPkgs)
+		} else {
+			createIssueToGithub(unknownPkgs)
+		}
 	}
 
 	fmt.Fprintf(w, "%s", b)
@@ -111,6 +130,10 @@ func main() {
 	port := os.Getenv("PORT")
 	if len(port) == 0 {
 		port = "8080"
+	}
+
+	if useSentry() {
+		raven.SetDSN(os.Getenv("SENTRY_API_KEY"))
 	}
 
 	mux := goji.NewMux()
