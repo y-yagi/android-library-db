@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  name = "github.com/certifi/gocertifi"
+  packages = ["."]
+  revision = "deb3ae2ef2610fde3330947281941c562861188b"
+  version = "2018.01.18"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/getsentry/raven-go"
+  packages = ["."]
+  revision = "ed7bcb39ff10f39ab08e317ce16df282845852fa"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "8ee79997227bf9b34611aee7946ae64735e6fd93"
@@ -31,6 +43,12 @@
     "oid"
   ]
   revision = "5bf161122cd640c2a5a2c1d7fa49ea9befff31dd"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "goji.io"
@@ -72,6 +90,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9ebf3d9a410aebf318fce308d5ee11ab9f82df8f276c5c392d0e4b174fed3f6d"
+  inputs-digest = "e8d8e6afc14098b3bef2f90b6d33b2be21e1cbdb3053b747180d6b415148291c"
   solver-name = "gps-cdcl"
   solver-version = 1
